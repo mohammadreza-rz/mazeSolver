@@ -18,7 +18,12 @@ import androidx.recyclerview.widget.RecyclerView
  * @author Mohamadhassan Ebrahimi & Mohsen Dehbashi
  */
 @Target(AnnotationTarget.PROPERTY)
-annotation class BindView(val id: String = DefaultID, val view: View, val field: Field) {
+annotation class BindView(
+    val id: String = DefaultID,
+    val view: View,
+    val field: Field,
+    val observable: Boolean = false
+) {
     enum class View {
         TextView, ImageView
     }
@@ -35,6 +40,7 @@ annotation class BindView(val id: String = DefaultID, val view: View, val field:
 operator fun BindView.component1() = this.id
 operator fun BindView.component2() = this.view
 operator fun BindView.component3() = this.field
+operator fun BindView.component4() = this.observable
 
 private fun sample() {
     class User(
