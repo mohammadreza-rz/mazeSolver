@@ -8,8 +8,8 @@ import kotlin.math.hypot
 class MainActivity : AppCompatActivity() {
     private val dimensionSize = 20
     private val tag = "check_tag"
-    private var start = Node(Status.Empty, Coordinate(1, 1), null)
-    private var goal = Node(Status.Empty, Coordinate(18, 19), null)
+    private var start = Node(Status.Empty, Coordinate(3, 2), null)
+    private var goal = Node(Status.Empty, Coordinate(7, 12), null)
     private val gameBoard = Array(dimensionSize) { i ->
         Array(dimensionSize) { j ->
             Node(Status.Empty, Coordinate(i, j), null)
@@ -28,20 +28,20 @@ class MainActivity : AppCompatActivity() {
 
         gameBoard[3][1].nodeStatus = Status.Block
         gameBoard[2][2].nodeStatus = Status.Block
-//        gameBoard[7][5].nodeStatus = Status.Block
-//        gameBoard[10][5].nodeStatus = Status.Block
-//        gameBoard[9][12].nodeStatus = Status.Block
-//        gameBoard[19][15].nodeStatus = Status.Block
-//        gameBoard[12][15].nodeStatus = Status.Block
-//        gameBoard[5][6].nodeStatus = Status.Block
+        gameBoard[7][5].nodeStatus = Status.Block
+        gameBoard[10][5].nodeStatus = Status.Block
+        gameBoard[9][12].nodeStatus = Status.Block
+        gameBoard[19][15].nodeStatus = Status.Block
+        gameBoard[12][15].nodeStatus = Status.Block
+        gameBoard[5][6].nodeStatus = Status.Block
 //        findRouteByBFS()?.forEach { Log.d(tag, it.coordinate.toString()) }
-//        iterativeDeepeningSearch().forEach {
-//            Log.d(
-//                tag,
-//                "/>${it.coordinate}"
-//            )
-//        }
-        aStarSearch().forEach { Log.d(tag, "/>${it.coordinate}") }
+        iterativeDeepeningSearch().forEach {
+            Log.d(
+                tag,
+                "/>${it.coordinate}"
+            )
+        }
+//        aStarSearch().forEach { Log.d(tag, "/>${it.coordinate}") }
     }
 
     private fun aStarSearch(): List<Node> {
@@ -68,11 +68,11 @@ class MainActivity : AppCompatActivity() {
             DFSVisitedNodes += (node)
 //            Log.d(tag, "***********************->${DFSVisitedNodes.size}")
             when {
-                isGoal(node) -> return SolutionStatus.Success to listOf(node)
+                isGoal(node) -> return SolutionStatus.Success to listOf()
                 limit == 0 -> return SolutionStatus.Cutoff to listOf()
                 else -> {
                     var cutoffOccurred = false
-                    findPossibleMoves(node)
+                    findPossibleMoves(node).asSequence()
                         .filterNot { it in DFSVisitedNodes }
                         .forEach {
                             val result = findRouteByDepthLimitedSearch(it, limit - 1)
@@ -80,8 +80,10 @@ class MainActivity : AppCompatActivity() {
 //                            Log.d(tag, ">${result.first} at ${it.coordinate}")
                             if (result.first == SolutionStatus.Cutoff) {
                                 cutoffOccurred = true
-                            } else if (result.first != SolutionStatus.Failure)
+                            } else if (result.first != SolutionStatus.Failure) {
+                                Log.d(tag, it.coordinate.toString())
                                 return result.first to listOf(it, *result.second.toTypedArray())
+                            }
                         }
                     return if (cutoffOccurred) {
                         SolutionStatus.Cutoff to listOf()
@@ -117,8 +119,8 @@ class MainActivity : AppCompatActivity() {
             }
             exploredNodes += selectNode
             val possibleMoves = findPossibleMoves(selectNode)
-            frontier += possibleMoves.filterNot { it in exploredNodes }
-                .filterNot { it in frontier }
+            frontier += possibleMoves.filterNot { exploredNodes.any { hadMoved -> hadMoved.coordinate == it.coordinate } }
+                .filterNot { frontier.any { willMove -> willMove.coordinate == it.coordinate } }
         }
     }
 
@@ -159,7 +161,7 @@ class MainActivity : AppCompatActivity() {
     private fun calculateHeuristicsValue(node: Node): Double {
         return hypot(
             (node.coordinate.first - goal.coordinate.first).toDouble(),
-            (node.coordinate.second - node.coordinate.second).toDouble()
+            (node.coordinate.second - goal.coordinate.second).toDouble()
         )
     }
 
